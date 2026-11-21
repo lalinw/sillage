@@ -2,11 +2,11 @@ import { Suspense } from "react";
 import { connection } from "next/server";
 import { DataTable } from "@/components/admin/data-table";
 import {
-  AddRecordButton,
-  EditRecordButton,
-  type RecordField,
+  CreateButton,
+  UpdateButton,
+  type FormField,
   type SelectOption,
-} from "@/components/admin/record-buttons";
+} from "@/components/admin/create-update-buttons";
 import { Stack } from "@/components/ui";
 import { formatDate, formatDateTime } from "@/lib/format";
 import { prisma, queryOrEmpty } from "@/lib/prisma";
@@ -22,7 +22,7 @@ import {
 const toOptions = (rows: { id: string; name: string }[]): SelectOption[] =>
   rows.map(({ id, name }) => ({ value: id, label: name }));
 
-const BRAND_FIELDS: RecordField[] = [
+const BRAND_FIELDS: FormField[] = [
   { name: "name", label: "Name", kind: "text", required: true },
   { name: "owner", label: "Owner", kind: "text" },
   { name: "company", label: "Company", kind: "text" },
@@ -67,7 +67,7 @@ async function BrandsData() {
     ]);
   const brandOptions = toOptions(brands);
 
-  const brandLinkFields: RecordField[] = [
+  const brandLinkFields: FormField[] = [
     {
       name: "brandId",
       label: "Brand",
@@ -93,7 +93,7 @@ async function BrandsData() {
     { name: "verificationDate", label: "Verification date", kind: "date" },
   ];
 
-  const collectionFields: RecordField[] = [
+  const collectionFields: FormField[] = [
     {
       name: "brandId",
       label: "Brand",
@@ -111,7 +111,7 @@ async function BrandsData() {
       <DataTable
         title="Brands"
         action={
-          <AddRecordButton
+          <CreateButton
             noun="brand"
             fields={BRAND_FIELDS}
             action={createBrand}
@@ -141,7 +141,7 @@ async function BrandsData() {
         rowActions={Object.fromEntries(
           brands.map((brand) => [
             brand.id,
-            <EditRecordButton
+            <UpdateButton
               key={brand.id}
               noun="brand"
               label={brand.name}
@@ -162,7 +162,7 @@ async function BrandsData() {
       <DataTable
         title="Brand Links"
         action={
-          <AddRecordButton
+          <CreateButton
             noun="brand link"
             fields={brandLinkFields}
             action={createBrandLink}
@@ -190,7 +190,7 @@ async function BrandsData() {
         rowActions={Object.fromEntries(
           brandLinks.map((link) => [
             link.id,
-            <EditRecordButton
+            <UpdateButton
               key={link.id}
               noun="brand link"
               label={`${link.brand.name} on ${link.platform.name}`}
@@ -210,7 +210,7 @@ async function BrandsData() {
       <DataTable
         title="Collections"
         action={
-          <AddRecordButton
+          <CreateButton
             noun="collection"
             fields={collectionFields}
             action={createCollection}
@@ -234,7 +234,7 @@ async function BrandsData() {
         rowActions={Object.fromEntries(
           collections.map((collection) => [
             collection.id,
-            <EditRecordButton
+            <UpdateButton
               key={collection.id}
               noun="collection"
               label={`${collection.name} (${collection.brand.name})`}

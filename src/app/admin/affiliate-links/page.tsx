@@ -2,10 +2,10 @@ import { Suspense } from "react";
 import { connection } from "next/server";
 import { DataTable } from "@/components/admin/data-table";
 import {
-  AddRecordButton,
-  EditRecordButton,
-  type RecordField,
-} from "@/components/admin/record-buttons";
+  CreateButton,
+  UpdateButton,
+  type FormField,
+} from "@/components/admin/create-update-buttons";
 import { formatDate, formatDateTime } from "@/lib/format";
 import { prisma, queryOrEmpty } from "@/lib/prisma";
 import { createAffiliateLink, updateAffiliateLink } from "./actions";
@@ -48,7 +48,7 @@ async function AffiliateLinksData() {
     ),
   ]);
 
-  const fields: RecordField[] = [
+  const fields: FormField[] = [
     {
       name: "perfumeId",
       label: "Perfume",
@@ -86,7 +86,7 @@ async function AffiliateLinksData() {
   return (
     <DataTable
       action={
-        <AddRecordButton
+        <CreateButton
           noun="affiliate link"
           fields={fields}
           action={createAffiliateLink}
@@ -114,7 +114,7 @@ async function AffiliateLinksData() {
       rowActions={Object.fromEntries(
         links.map((link) => [
           link.id,
-          <EditRecordButton
+          <UpdateButton
             key={link.id}
             noun="affiliate link"
             label={`${link.perfume.name} on ${link.platform.name}`}

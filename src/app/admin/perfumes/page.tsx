@@ -2,10 +2,10 @@ import { Suspense } from "react";
 import { connection } from "next/server";
 import { DataTable } from "@/components/admin/data-table";
 import {
-  AddRecordButton,
-  EditRecordButton,
-  type RecordField,
-} from "@/components/admin/record-buttons";
+  CreateButton,
+  UpdateButton,
+  type FormField,
+} from "@/components/admin/create-update-buttons";
 import { formatDateTime } from "@/lib/format";
 import { prisma, queryOrEmpty } from "@/lib/prisma";
 import { createPerfume, updatePerfume } from "./actions";
@@ -43,7 +43,7 @@ async function PerfumesData() {
     ),
   ]);
 
-  const fields: RecordField[] = [
+  const fields: FormField[] = [
     { name: "name", label: "Name", kind: "text", required: true },
     {
       name: "brandId",
@@ -80,7 +80,7 @@ async function PerfumesData() {
   return (
     <DataTable
       action={
-        <AddRecordButton
+        <CreateButton
           noun="perfume"
           fields={fields}
           action={createPerfume}
@@ -108,7 +108,7 @@ async function PerfumesData() {
       rowActions={Object.fromEntries(
         perfumes.map((perfume) => [
           perfume.id,
-          <EditRecordButton
+          <UpdateButton
             key={perfume.id}
             noun="perfume"
             label={perfume.name}

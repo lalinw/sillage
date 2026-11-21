@@ -24,7 +24,7 @@ export type SelectOption = {
   parent?: string;
 };
 
-export type RecordField = {
+export type FormField = {
   name: string;
   label: string;
   required?: boolean;
@@ -35,16 +35,16 @@ export type RecordField = {
   | { kind: "select"; options: SelectOption[]; parentField?: string }
 );
 
-type RecordFormProps = {
-  fields: RecordField[];
+type FormProps = {
+  fields: FormField[];
   action: (values: FormValues) => Promise<SaveResult>;
 };
 
 // "Add ..." button that opens a form for one new row of an admin table.
-export function AddRecordButton({
+export function CreateButton({
   noun,
   ...formProps
-}: RecordFormProps & {
+}: FormProps & {
   // What is being added, e.g. "brand" for "Add brand".
   noun: string;
 }) {
@@ -65,7 +65,7 @@ export function AddRecordButton({
         title={`Add a new ${noun}`}
       >
         {/* Modal unmounts its content when closed, so each open starts a fresh form. */}
-        <RecordForm
+        <Form
           {...formProps}
           submitLabel={`Add ${noun}`}
           onClose={() => setOpened(false)}
@@ -76,12 +76,12 @@ export function AddRecordButton({
 }
 
 // Pencil button that opens the same form filled with one row's current values.
-export function EditRecordButton({
+export function UpdateButton({
   noun,
   label,
   initialValues,
   ...formProps
-}: RecordFormProps & {
+}: FormProps & {
   noun: string;
   // Names the row for screen readers, e.g. "Edit Shopee".
   label: string;
@@ -103,7 +103,7 @@ export function EditRecordButton({
         onClose={() => setOpened(false)}
         title={`Edit ${noun}`}
       >
-        <RecordForm
+        <Form
           {...formProps}
           initialValues={initialValues}
           submitLabel="Save"
@@ -114,13 +114,13 @@ export function EditRecordButton({
   );
 }
 
-function RecordForm({
+function Form({
   fields,
   action,
   initialValues = {},
   submitLabel,
   onClose,
-}: RecordFormProps & {
+}: FormProps & {
   initialValues?: FormValues;
   submitLabel: string;
   onClose: () => void;

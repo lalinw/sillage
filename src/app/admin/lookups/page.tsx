@@ -2,10 +2,10 @@ import { Suspense } from "react";
 import { connection } from "next/server";
 import { DataTable } from "@/components/admin/data-table";
 import {
-  AddRecordButton,
-  EditRecordButton,
-  type RecordField,
-} from "@/components/admin/record-buttons";
+  CreateButton,
+  UpdateButton,
+  type FormField,
+} from "@/components/admin/create-update-buttons";
 import { Stack } from "@/components/ui";
 import type { FormValues, SaveResult } from "@/lib/admin-save";
 import { formatDateTime } from "@/lib/format";
@@ -19,7 +19,7 @@ import {
   updateVerificationType,
 } from "./actions";
 
-const FIELDS: RecordField[] = [
+const FIELDS: FormField[] = [
   { name: "name", label: "Name", kind: "text", required: true },
   {
     name: "varName",
@@ -63,7 +63,7 @@ function LookupTable({
   return (
     <DataTable
       title={title}
-      action={<AddRecordButton noun={noun} fields={FIELDS} action={create} />}
+      action={<CreateButton noun={noun} fields={FIELDS} action={create} />}
       columns={COLUMNS}
       rows={rows.map((row) => ({
         id: row.id,
@@ -75,7 +75,7 @@ function LookupTable({
       rowActions={Object.fromEntries(
         rows.map((row) => [
           row.id,
-          <EditRecordButton
+          <UpdateButton
             key={row.id}
             noun={noun}
             label={row.name}
