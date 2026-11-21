@@ -1,0 +1,226 @@
+// Prisma schema for Sillage.
+// Docs: https://pris.ly/d/prisma-schema
+//
+// Conventions:
+//   - Models are PascalCase singular (User); tables are snake_case plural via @@map ("users").
+//   - Fields are camelCase; columns are snake_case via @map.
+//   - IDs are UUIDs (v4); every model has createdAt / updatedAt.
+//   - Foreign keys are indexed explicitly (Postgres doesn't do it automatically).
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ---------- Enums ----------
+
+enum NoteType {
+  TOP
+  MIDDLE
+  BASE
+  LINEAR
+
+  @@map("note_type")
+}
+
+// ---------- Brands ----------
+
+model Brand {
+  id        String   @id @default(uuid()) @db.Uuid
+  name      String   @unique
+  address   String?
+  owner     String?
+  company   String?
+  // Short description shown in the brand's textarea.
+  descr     String?
+  remarks   String?
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  collections Collection[]
+  perfumes    Perfume[]
+  links       BrandLink[]
+
+  @@map("brands")
+}
+
+model BrandLink {
+  id                 String    @id @default(uuid()) @db.Uuid
+  brandId            String    @map("brand_id") @db.Uuid
+  platformId         String    @map("platform_id") @db.Uuid
+  link               String
+  verificationTypeId String    @map("verification_type_id") @db.Uuid
+  verificationDate   DateTime? @map("verification_date") @db.Date
+  createdAt          DateTime  @default(now()) @map("created_at")
+  updatedAt          DateTime  @updatedAt @map("updated_at")
+
+  brand            Brand            @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  platform         Platform         @relation(fields: [platformId], references: [id], onDelete: Restrict)
+  verificationType VerificationType @relation(fields: [verificationTypeId], references: [id], onDelete: Restrict)
+
+  @@index([brandId])
+  @@index([platformId])
+  @@index([verificationTypeId])
+  @@map("brand_links")
+}
+
+// Who runs the page/store a brand or affiliate link points to (Brand, Authorized retailer, ...).
+model VerificationType {
+  id        String   @id @default(uuid()) @db.Uuid
+  name      String   @unique
+  // Stable identifier for code to refer to this row (e.g. "authorizedRetailer").
+  varName   String   @unique @map("var_name")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  brandLinks     BrandLink[]
+  affiliateLinks AffiliateLink[]
+
+  @@map("verification_types")
+}
+
+model Collection {
+  id        String   @id @default(uuid()) @db.Uuid
+  brandId   String   @map("brand_id") @db.Uuid
+  name      String
+  descr     String?
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  brand    Brand     @relation(fields: [brandId], references: [id], onDelete: Restrict)
+  perfumes Perfume[]
+
+  @@unique([brandId, name])
+  @@map("collections")
+}
+
+// ---------- Perfumes ----------
+
+model Perfume {
+  id                String   @id @default(uuid()) @db.Uuid
+  name              String
+  descr             String?
+  brandId           String   @map("brand_id") @db.Uuid
+  formulationTypeId String   @map("formulation_type_id") @db.Uuid
+  // Optional; when set, the collection must belong to the same brand (enforce in app code).
+  collectionId      String?  @map("collection_id") @db.Uuid
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+
+  brand           Brand           @relation(fields: [brandId], references: [id], onDelete: Restrict)
+  formulationType FormulationType @relation(fields: [formulationTypeId], references: [id], onDelete: Restrict)
+  collection      Collection?     @relation(fields: [collectionId], references: [id], onDelete: SetNull)
+  formulations    Formulation[]
+  affiliateLinks  AffiliateLink[]
+
+  @@index([brandId])
+  @@index([formulationTypeId])
+  @@index([collectionId])
+  @@map("perfumes")
+}
+
+model Formulation {
+  id           String   @id @default(uuid()) @db.Uuid
+  perfumeId    String   @map("perfume_id") @db.Uuid
+  year         Int?     @db.SmallInt
+  discontinued Boolean  @default(false)
+  remarks      String?
+  image        String?
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  perfume Perfume           @relation(fields: [perfumeId], references: [id], onDelete: Cascade)
+  notes   FormulationNote[]
+
+  @@index([perfumeId])
+  @@map("formulations")
+}
+
+// Concentration / product type of a perfume (EDP, EDT, Parfum, Cologne, ...).
+model FormulationType {
+  id        String   @id @default(uuid()) @db.Uuid
+  name      String   @unique
+  // Stable identifier for code to refer to this row (e.g. "eauDeParfum").
+  varName   String   @unique @map("var_name")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  perfumes Perfume[]
+
+  @@map("formulation_types")
+}
+
+model AffiliateLink {
+  id                 String    @id @default(uuid()) @db.Uuid
+  perfumeId          String    @map("perfume_id") @db.Uuid
+  platformId         String    @map("platform_id") @db.Uuid
+  verificationTypeId String    @map("verification_type_id") @db.Uuid
+  link               String
+  expiresAt          DateTime? @map("expires_at") @db.Date
+  createdAt          DateTime  @default(now()) @map("created_at")
+  updatedAt          DateTime  @updatedAt @map("updated_at")
+
+  perfume          Perfume          @relation(fields: [perfumeId], references: [id], onDelete: Cascade)
+  platform         Platform         @relation(fields: [platformId], references: [id], onDelete: Restrict)
+  verificationType VerificationType @relation(fields: [verificationTypeId], references: [id], onDelete: Restrict)
+
+  @@index([perfumeId])
+  @@index([platformId])
+  @@index([verificationTypeId])
+  @@map("affiliate_links")
+}
+
+// Where brand and affiliate links live (Shopee, Lazada, TikTok, ...).
+model Platform {
+  id        String   @id @default(uuid()) @db.Uuid
+  name      String   @unique
+  // Stable identifier for code to refer to this row (e.g. "shopee").
+  varName   String   @unique @map("var_name")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  brandLinks     BrandLink[]
+  affiliateLinks AffiliateLink[]
+
+  @@map("platforms")
+}
+
+// ---------- Notes ----------
+
+model Note {
+  id          String   @id @default(uuid()) @db.Uuid
+  name        String   @unique
+  // The main note this name belongs to (e.g. "Agarwood" -> "Oud").
+  // A main note points to itself; empty means not assigned yet.
+  mainAliasId String?  @map("main_alias_id") @db.Uuid
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  mainAlias    Note?             @relation("NoteAliases", fields: [mainAliasId], references: [id], onDelete: NoAction)
+  aliases      Note[]            @relation("NoteAliases")
+  formulations FormulationNote[]
+
+  @@index([mainAliasId])
+  @@map("notes")
+}
+
+// Which notes appear in a formulation, and where in the pyramid.
+model FormulationNote {
+  id            String   @id @default(uuid()) @db.Uuid
+  formulationId String   @map("formulation_id") @db.Uuid
+  noteId        String   @map("note_id") @db.Uuid
+  type          NoteType
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  formulation Formulation @relation(fields: [formulationId], references: [id], onDelete: Cascade)
+  note        Note        @relation(fields: [noteId], references: [id], onDelete: Restrict)
+
+  @@unique([formulationId, noteId, type])
+  @@index([noteId])
+  @@map("formulation_notes")
+}
