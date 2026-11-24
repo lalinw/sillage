@@ -53,3 +53,5 @@ next-env.d.ts
 /docs
 
 /prisma/migrations
+# uploaded images (stored on disk in development)
+/uploads

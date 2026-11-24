@@ -13,7 +13,6 @@ export type CreateFormulationResult =
 type FormulationNoteInput = { noteId: string; type: NoteType };
 
 type FormulationFields = {
-  image: string;
   year: number | null;
   discontinued: boolean;
   remarks: string;
@@ -21,19 +20,13 @@ type FormulationFields = {
 };
 
 // Returns an error message when the shared fields aren't valid.
-function validateFields(fields: FormulationFields, image: string | null) {
+function validateFields(fields: FormulationFields) {
   const { year, notes } = fields;
   if (
     year !== null &&
     (!Number.isInteger(year) || year < 1000 || year > 9999)
   ) {
     return "Enter a four-digit year.";
-  }
-  if (image && !URL.canParse(image)) {
-    return "Enter a full image link, starting with https://.";
-  }
-  if (image && !["http:", "https:"].includes(new URL(image).protocol)) {
-    return "The image link must start with http:// or https://.";
   }
   if (notes.some((note) => !Object.values(NoteType).includes(note.type))) {
     return "Unknown note type.";
@@ -46,8 +39,7 @@ export async function createFormulation(
 ): Promise<CreateFormulationResult> {
   if (!input.perfumeId) return { ok: false, error: "Choose a perfume." };
 
-  const image = input.image.trim() || null;
-  const invalid = validateFields(input, image);
+  const invalid = validateFields(input);
   if (invalid) return { ok: false, error: invalid };
 
   try {
@@ -60,7 +52,6 @@ export async function createFormulation(
     const { id } = await prisma.formulation.create({
       data: {
         perfumeId: perfume.id,
-        image,
         year: input.year,
         discontinued: input.discontinued,
         remarks: input.remarks.trim() || null,
@@ -87,8 +78,7 @@ export async function updateFormulation(
   const name = input.name.trim();
   if (!name) return { ok: false, error: "Enter a name." };
 
-  const image = input.image.trim() || null;
-  const invalid = validateFields(input, image);
+  const invalid = validateFields(input);
   if (invalid) return { ok: false, error: invalid };
 
   try {
@@ -96,7 +86,6 @@ export async function updateFormulation(
       const formulation = await tx.formulation.update({
         where: { id: input.id },
         data: {
-          image,
           year: input.year,
           discontinued: input.discontinued,
           remarks: input.remarks.trim() || null,

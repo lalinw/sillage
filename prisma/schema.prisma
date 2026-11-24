@@ -116,6 +116,7 @@ model Perfume {
   collection      Collection?     @relation(fields: [collectionId], references: [id], onDelete: SetNull)
   formulations    Formulation[]
   affiliateLinks  AffiliateLink[]
+  images          Image[]
 
   @@index([brandId])
   @@index([formulationTypeId])
@@ -129,7 +130,6 @@ model Formulation {
   year         Int?     @db.SmallInt
   discontinued Boolean  @default(false)
   remarks      String?
-  image        String?
   createdAt    DateTime @default(now()) @map("created_at")
   updatedAt    DateTime @updatedAt @map("updated_at")
 
@@ -223,4 +223,18 @@ model FormulationNote {
   @@unique([formulationId, noteId, type])
   @@index([noteId])
   @@map("formulation_notes")
+}
+
+model Image {
+  id        String   @id @default(uuid()) @db.Uuid
+  perfumeId String   @map("perfume_id") @db.Uuid
+  // An uploaded file ("/uploads/<file>.webp") or a link to an image elsewhere.
+  url       String
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  perfume Perfume @relation(fields: [perfumeId], references: [id], onDelete: Cascade)
+
+  @@index([perfumeId])
+  @@map("images")
 }

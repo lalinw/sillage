@@ -8,6 +8,7 @@ import {
   type SaveResult,
   saveFailure,
 } from "@/lib/admin-save";
+import { deleteImage, MAX_UPLOAD_BYTES, saveImage } from "@/lib/image-storage";
 import { prisma } from "@/lib/prisma";
 
 export async function createPerfume(values: FormValues) {
@@ -60,5 +61,40 @@ async function savePerfume(
     return { ok: true };
   } catch (error) {
     return saveFailure(error, "That perfume already exists.");
+  }
+}
+
+// Uploads an image for the perfume with this id, resized and saved as WebP.
+export async function uploadPerfumeImage(
+  perfumeId: string,
+  formData: FormData,
+): Promise<SaveResult> {
+  const file = formData.get("image");
+  if (!(file instanceof File) || file.size === 0) {
+    return { ok: false, error: "Choose an image to upload." };
+  }
+  if (file.size > MAX_UPLOAD_BYTES) {
+    return { ok: false, error: "The image must be 10 MB or smaller." };
+  }
+
+  let url: string;
+  try {
+    url = await saveImage(file);
+  } catch {
+    return {
+      ok: false,
+      error:
+        "That file isn't an image that can be read. Try a JPEG, PNG or WebP.",
+    };
+  }
+
+  try {
+    await prisma.image.create({ data: { perfumeId, url } });
+    revalidateAdmin();
+    return { ok: true };
+  } catch (error) {
+    // The row wasn't saved, so don't leave the file behind.
+    await deleteImage(url);
+    return saveFailure(error, "That image already exists.");
   }
 }

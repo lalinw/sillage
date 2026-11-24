@@ -1,21 +1,16 @@
 "use client";
 
 import { useState } from "react";
-import { Group, Select, Stack, Table, Text, TextInput } from "@/components/ui";
+import { Group, Stack, Table, Text } from "@/components/ui";
 import { ShowDatesButton } from "./show-dates-button";
+import {
+  useTableControls,
+  type TableColumn,
+  type TableRow,
+} from "./table-controls";
 
 // Timestamp columns, hidden until "Show dates" is pressed.
 const DATE_KEYS = new Set(["updatedAt", "createdAt"]);
-
-type Row = { id: string } & Record<string, string | null>;
-
-type Column = {
-  key: string;
-  label: string;
-  // Adds a filter in the header: "select" is a dropdown of the column's values,
-  // "search" is a text box that keeps rows containing what's typed.
-  filter?: "select" | "search";
-};
 
 // Read-only table of one database table. Pages pass rows already formatted as text.
 export function DataTable({
@@ -24,52 +19,28 @@ export function DataTable({
   columns,
   rows,
   rowActions,
+  cells,
+  minWidth = 700,
 }: {
   title?: string;
   // Shown at the top right, e.g. an "Add" button.
   action?: React.ReactNode;
-  columns: Column[];
-  rows: Row[];
+  columns: TableColumn[];
+  rows: TableRow[];
   // Shown at the end of each row, keyed by row id, e.g. an edit button.
   rowActions?: Record<string, React.ReactNode>;
+  // Content that isn't plain text, by column key and then row id, e.g. images.
+  cells?: Record<string, Record<string, React.ReactNode>>;
+  // Below this width the table scrolls sideways instead of squeezing.
+  minWidth?: number;
 }) {
-  const [filters, setFilters] = useState<Record<string, string | null>>({});
   const [showDates, setShowDates] = useState(false);
+  const { shownRows, header, ariaSort } = useTableControls(rows, columns);
   const hasDates = columns.some(({ key }) => DATE_KEYS.has(key));
   const shownColumns = showDates
     ? columns
     : columns.filter(({ key }) => !DATE_KEYS.has(key));
   const columnCount = shownColumns.length + (rowActions ? 1 : 0);
-
-  const searchKeys = new Set(
-    columns.filter((column) => column.filter === "search").map((c) => c.key),
-  );
-
-  // True when the row matches every filter, optionally ignoring one column's.
-  const matches = (row: Row, ignoreKey?: string) =>
-    Object.entries(filters).every(([key, value]) => {
-      if (key === ignoreKey || !value?.trim()) return true;
-      if (searchKeys.has(key)) {
-        return (row[key] ?? "")
-          .toLowerCase()
-          .includes(value.trim().toLowerCase());
-      }
-      return row[key] === value;
-    });
-  const shownRows = rows.filter((row) => matches(row));
-
-  // Options follow the other filters. The current selection stays listed so it
-  // can still be seen and changed when other filters leave no rows for it.
-  function filterOptions(key: string) {
-    const values = new Set(
-      rows
-        .filter((row) => matches(row, key))
-        .flatMap((row) => (row[key] ? [row[key]] : [])),
-    );
-    const current = filters[key];
-    if (current) values.add(current);
-    return [...values].sort((a, b) => a.localeCompare(b));
-  }
 
   return (
     <Stack gap="xs">
@@ -84,54 +55,13 @@ export function DataTable({
           </Group>
         </Group>
       )}
-      <Table.ScrollContainer minWidth={700}>
+      <Table.ScrollContainer minWidth={minWidth}>
         <Table>
           <Table.Thead>
             <Table.Tr>
-              {shownColumns.map(({ key, label, filter }) => (
-                <Table.Th key={key}>
-                  {filter === "search" && (
-                    <Stack gap={4}>
-                      {label}
-                      <TextInput
-                        size="xs"
-                        miw={160}
-                        aria-label={`Search ${label.toLowerCase()}`}
-                        placeholder="Search"
-                        value={filters[key] ?? ""}
-                        onChange={(event) => {
-                          const { value } = event.currentTarget;
-                          setFilters((current) => ({
-                            ...current,
-                            [key]: value,
-                          }));
-                        }}
-                      />
-                    </Stack>
-                  )}
-                  {filter === "select" && (
-                    <Stack gap={4}>
-                      {label}
-                      <Select
-                        size="xs"
-                        // Otherwise a short column squeezes it until values wrap.
-                        miw={160}
-                        aria-label={`Filter by ${label.toLowerCase()}`}
-                        placeholder="All"
-                        searchable
-                        clearable
-                        data={filterOptions(key)}
-                        value={filters[key] ?? null}
-                        onChange={(value) =>
-                          setFilters((current) => ({
-                            ...current,
-                            [key]: value,
-                          }))
-                        }
-                      />
-                    </Stack>
-                  )}
-                  {!filter && label}
+              {shownColumns.map((column) => (
+                <Table.Th key={column.key} aria-sort={ariaSort(column.key)}>
+                  {header(column)}
                 </Table.Th>
               ))}
               {rowActions && <Table.Th />}
@@ -141,7 +71,9 @@ export function DataTable({
             {shownRows.map((row) => (
               <Table.Tr key={row.id}>
                 {shownColumns.map(({ key }) => (
-                  <Table.Td key={key}>{row[key]}</Table.Td>
+                  <Table.Td key={key}>
+                    {cells?.[key]?.[row.id] ?? row[key]}
+                  </Table.Td>
                 ))}
                 {rowActions && <Table.Td>{rowActions[row.id]}</Table.Td>}
               </Table.Tr>

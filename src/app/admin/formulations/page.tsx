@@ -15,7 +15,6 @@ async function FormulationsData() {
           year: true,
           discontinued: true,
           remarks: true,
-          image: true,
           createdAt: true,
           updatedAt: true,
           perfume: {
@@ -23,6 +22,11 @@ async function FormulationsData() {
               name: true,
               brand: { select: { name: true } },
               formulationType: { select: { name: true } },
+              images: {
+                select: { url: true },
+                orderBy: { createdAt: "asc" },
+                take: 1,
+              },
             },
           },
           notes: {

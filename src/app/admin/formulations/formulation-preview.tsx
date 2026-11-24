@@ -61,7 +61,6 @@ export function FormulationPreview({
 }) {
   const [name, setName] = useState(formulation?.perfume.name ?? "");
   const [perfumeId, setPerfumeId] = useState<string | null>(null);
-  const [image, setImage] = useState(formulation?.image ?? "");
   const [year, setYear] = useState<string | number>(formulation?.year ?? "");
   const [discontinued, setDiscontinued] = useState(
     formulation?.discontinued ?? false,
@@ -73,7 +72,6 @@ export function FormulationPreview({
 
   function startEditing() {
     setName(formulation?.perfume.name ?? "");
-    setImage(formulation?.image ?? "");
     setYear(formulation?.year ?? "");
     setDiscontinued(formulation?.discontinued ?? false);
     setRemarks(formulation?.remarks ?? "");
@@ -84,7 +82,6 @@ export function FormulationPreview({
 
   function save() {
     const fields = {
-      image,
       year: year === "" ? null : Number(year),
       discontinued,
       remarks,
@@ -112,7 +109,8 @@ export function FormulationPreview({
   }
 
   const shownNotes = editing ? notes : draftNotesOf(formulation);
-  const shownImage = editing ? image : formulation?.image;
+  // Images belong to the perfume; upload them on the Perfumes page.
+  const shownImage = formulation?.perfume.images[0]?.url;
 
   return (
     <Paper withBorder p="md">
@@ -150,12 +148,6 @@ export function FormulationPreview({
                   nothingFoundMessage="No perfumes found"
                 />
               )}
-              <TextInput
-                label="Image link"
-                placeholder="https://"
-                value={image}
-                onChange={(event) => setImage(event.currentTarget.value)}
-              />
               <NumberInput
                 label="Year"
                 hideControls

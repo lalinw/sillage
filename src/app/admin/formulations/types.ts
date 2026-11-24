@@ -19,13 +19,14 @@ export type FormulationRow = {
   year: number | null;
   discontinued: boolean;
   remarks: string | null;
-  image: string | null;
   createdAt: Date;
   updatedAt: Date;
   perfume: {
     name: string;
     brand: { name: string };
     formulationType: { name: string };
+    // The perfume's first image, shown in the preview.
+    images: { url: string }[];
   };
   notes: { type: NoteType; note: { id: string; name: string } }[];
 };

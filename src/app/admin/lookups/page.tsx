@@ -6,7 +6,7 @@ import {
   UpdateButton,
   type FormField,
 } from "@/components/admin/create-update-buttons";
-import { Stack } from "@/components/ui";
+import { SimpleGrid } from "@/components/ui";
 import type { FormValues, SaveResult } from "@/lib/admin-save";
 import { formatDateTime } from "@/lib/format";
 import { prisma, queryOrEmpty } from "@/lib/prisma";
@@ -65,6 +65,8 @@ function LookupTable({
       title={title}
       action={<CreateButton noun={noun} fields={FIELDS} action={create} />}
       columns={COLUMNS}
+      // Narrow enough for a grid cell; dates scroll sideways when shown.
+      minWidth={320}
       rows={rows.map((row) => ({
         id: row.id,
         name: row.name,
@@ -100,9 +102,9 @@ async function LookupsData() {
     queryOrEmpty(() => prisma.verificationType.findMany({ orderBy })),
   ]);
 
-  // Extra space between tables, so each reads as its own section.
+  // Side by side in a grid rather than each stretched across the page.
   return (
-    <Stack gap={48}>
+    <SimpleGrid cols={{ base: 1, md: 2, xl: 3 }} spacing={48}>
       <LookupTable
         title="Platforms"
         noun="platform"
@@ -124,7 +126,7 @@ async function LookupsData() {
         create={createVerificationType}
         update={updateVerificationType}
       />
-    </Stack>
+    </SimpleGrid>
   );
 }
 

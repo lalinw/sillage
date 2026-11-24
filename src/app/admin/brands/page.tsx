@@ -169,11 +169,25 @@ async function BrandsData() {
           />
         }
         columns={[
-          { key: "brand", label: "Brand", filter: "select" },
-          { key: "platform", label: "Platform" },
+          { key: "brand", label: "Brand", filter: "select", sortable: true },
+          {
+            key: "platform",
+            label: "Platform",
+            filter: "select",
+            sortable: true,
+          },
           { key: "link", label: "Link" },
-          { key: "verificationType", label: "Verification Type" },
-          { key: "verificationDate", label: "Verification Date" },
+          {
+            key: "verificationType",
+            label: "Verification Type",
+            filter: "select",
+            sortable: true,
+          },
+          {
+            key: "verificationDate",
+            label: "Verification Date",
+            sortable: true,
+          },
           { key: "updatedAt", label: "Updated At" },
           { key: "createdAt", label: "Created At" },
         ]}
@@ -218,7 +232,7 @@ async function BrandsData() {
         }
         columns={[
           { key: "name", label: "Name" },
-          { key: "brand", label: "Brand", filter: "select" },
+          { key: "brand", label: "Brand", filter: "select", sortable: true },
           { key: "descr", label: "Description" },
           { key: "updatedAt", label: "Updated At" },
           { key: "createdAt", label: "Created At" },

@@ -94,10 +94,20 @@ async function AffiliateLinksData() {
       }
       columns={[
         { key: "perfume", label: "Perfume", filter: "select" },
-        { key: "platform", label: "Platform", filter: "select" },
+        {
+          key: "platform",
+          label: "Platform",
+          filter: "select",
+          sortable: true,
+        },
         { key: "link", label: "Link" },
-        { key: "verificationType", label: "Verification Type" },
-        { key: "expiresAt", label: "Expires At" },
+        {
+          key: "verificationType",
+          label: "Verification Type",
+          filter: "select",
+          sortable: true,
+        },
+        { key: "expiresAt", label: "Expires At", sortable: true },
         { key: "updatedAt", label: "Updated At" },
         { key: "createdAt", label: "Created At" },
       ]}

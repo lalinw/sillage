@@ -8,7 +8,8 @@ import {
 } from "@/components/admin/create-update-buttons";
 import { formatDateTime } from "@/lib/format";
 import { prisma, queryOrEmpty } from "@/lib/prisma";
-import { createPerfume, updatePerfume } from "./actions";
+import { createPerfume, updatePerfume, uploadPerfumeImage } from "./actions";
+import { PerfumeImages } from "./perfume-images";
 
 async function PerfumesData() {
   // Always read fresh rows at request time, never at build time.
@@ -22,6 +23,10 @@ async function PerfumesData() {
           brand: { select: { name: true } },
           formulationType: { select: { name: true } },
           collection: { select: { name: true } },
+          images: {
+            select: { id: true, url: true },
+            orderBy: { createdAt: "asc" },
+          },
         },
         orderBy,
       }),
@@ -80,24 +85,32 @@ async function PerfumesData() {
   return (
     <DataTable
       action={
-        <CreateButton
-          noun="perfume"
-          fields={fields}
-          action={createPerfume}
-        />
+        <CreateButton noun="perfume" fields={fields} action={createPerfume} />
       }
       columns={[
         { key: "name", label: "Name", filter: "search" },
+        { key: "images", label: "Image" },
         { key: "descr", label: "Description" },
-        { key: "brand", label: "Brand", filter: "select" },
-        { key: "formulationType", label: "Formulation Type" },
-        { key: "collection", label: "Collection", filter: "search" },
+        { key: "brand", label: "Brand", filter: "select", sortable: true },
+        {
+          key: "formulationType",
+          label: "Formulation Type",
+          filter: "select",
+          sortable: true,
+        },
+        {
+          key: "collection",
+          label: "Collection",
+          filter: "select",
+          sortable: true,
+        },
         { key: "updatedAt", label: "Updated At" },
         { key: "createdAt", label: "Created At" },
       ]}
       rows={perfumes.map((perfume) => ({
         id: perfume.id,
         name: perfume.name,
+        images: null,
         descr: perfume.descr,
         brand: perfume.brand.name,
         formulationType: perfume.formulationType.name,
@@ -105,6 +118,20 @@ async function PerfumesData() {
         updatedAt: formatDateTime(perfume.updatedAt),
         createdAt: formatDateTime(perfume.createdAt),
       }))}
+      cells={{
+        images: Object.fromEntries(
+          perfumes.map((perfume) => [
+            perfume.id,
+            <PerfumeImages
+              key={perfume.id}
+              perfumeName={perfume.name}
+              brandName={perfume.brand.name}
+              images={perfume.images}
+              upload={uploadPerfumeImage.bind(null, perfume.id)}
+            />,
+          ]),
+        ),
+      }}
       rowActions={Object.fromEntries(
         perfumes.map((perfume) => [
           perfume.id,
